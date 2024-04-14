@@ -1,5 +1,5 @@
-use redfish_codegen::models::message::v1_1_2::Message;
-use redfish_codegen::models::redfish::{Error, RedfishError};
+use redfish_models::models::message::v1_1_2::Message;
+use redfish_models::models::redfish::{Error, RedfishError};
 
 pub fn one_message(error: Message) -> Error {
     let message = error.message.as_deref().unwrap_or("").to_string();

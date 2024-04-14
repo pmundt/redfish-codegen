@@ -1,5 +1,5 @@
 use axum::{response::IntoResponse, Json};
-use redfish_codegen::{Metadata, SCHEMA_BASE_URL};
+use redfish_models::{Metadata, SCHEMA_BASE_URL};
 
 /// Constructs an HTTP response with the Link header set to the path of the
 /// json-schema document describing the Redfish model contained in the response

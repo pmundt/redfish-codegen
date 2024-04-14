@@ -3,7 +3,7 @@ use axum::{
     response::{AppendHeaders, IntoResponse, Response},
     Json,
 };
-use redfish_codegen::{models::redfish, registries::base::v1_16_0::Base};
+use redfish_models::{models::redfish, registries::base::v1_16_0::Base};
 
 use crate::privilege::Role;
 use crate::{convert::IntoRedfishMessage, error};

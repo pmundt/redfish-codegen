@@ -7,7 +7,7 @@ use axum::{
     Extension, Json, Router,
 };
 use redfish_axum::{session::Session, session_collection::SessionCollection};
-use redfish_codegen::models::{
+use redfish_models::models::{
     odata_v4, resource, session::v1_6_0::Session as SessionModel,
     session_collection::SessionCollection as SessionCollectionModel,
     session_service::v1_1_8::SessionService as SessionServiceModel,

@@ -1,4 +1,4 @@
-use redfish_codegen::models::privileges::PrivilegeType;
+use redfish_models::models::privileges::PrivilegeType;
 use std::marker::PhantomData;
 
 /// The privileges called out in the Redfish specification.
