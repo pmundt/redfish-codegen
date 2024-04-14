@@ -3,7 +3,17 @@
 <StyleSheet id="58d6989a-66f8-11ec-b4c8-0456e5e540ed">
 <styleSheet>
 <val>diagram {
- /* line-style: sloppy 0.3; */
+  background-color: #242424;
+}
+
+* {
+  color: white;
+  text-color: white;
+}
+
+:root &gt; pentagon &gt; diagramtype, :root &gt; pentagon &gt; name {
+  color: white;
+  text-color: black;
 }
 
 controlflow {
