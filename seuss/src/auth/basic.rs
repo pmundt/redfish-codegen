@@ -1,6 +1,6 @@
 use axum::{http::request::Parts, response::Response};
 use base64::engine::{general_purpose, Engine};
-use redfish_codegen::models::redfish;
+use redfish_models::models::redfish;
 use redfish_core::auth::{unauthorized, AuthenticateRequest, AuthenticatedUser};
 use std::str;
 

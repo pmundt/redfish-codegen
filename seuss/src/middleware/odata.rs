@@ -14,7 +14,7 @@ use axum::{
     routing::Route,
     Json,
 };
-use redfish_codegen::{registries::base::v1_16_0::Base, ODATA_VERSION};
+use redfish_models::{registries::base::v1_16_0::Base, ODATA_VERSION};
 use redfish_core::{convert::IntoRedfishMessage, error};
 use tower::{Layer, Service};
 

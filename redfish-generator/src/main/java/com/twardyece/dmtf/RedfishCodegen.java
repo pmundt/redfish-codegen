@@ -263,7 +263,7 @@ public class RedfishCodegen {
 
         // The rest of the components
         RegistryContext baseRegistry = registries.get(new PascalCaseName("Base"));
-        baseRegistry.rustType.getPath().getComponents().set(0, new SnakeCaseName("redfish_codegen"));
+        baseRegistry.rustType.getPath().getComponents().set(0, new SnakeCaseName("redfish_models"));
         int pathDepth = libFile.getContext().moduleContext.path.getComponents().size();
         ComponentRepository componentRepository = new ComponentRepository(
                 new ComponentTypeTranslationService(this.modelResolver),

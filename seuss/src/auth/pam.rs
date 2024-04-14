@@ -1,5 +1,5 @@
 use core::fmt;
-use redfish_codegen::models::redfish;
+use redfish_models::models::redfish;
 use redfish_core::{
     auth::{insufficient_privilege, AuthenticatedUser},
     privilege::Role,

@@ -26,7 +26,7 @@ OPENAPI_DOCUMENT=api/openapi/openapi.yaml
 JAR_FILE=redfish-generator/target/redfish-codegen-0.3.1-SNAPSHOT.jar
 JVM_ARGS=-DmaxYamlCodePoints=6291456 -Dfile.encoding=UTF-8
 
-define redfish_codegen
+define redfish_models
 (cd $1 && java $(JVM_ARGS) -jar ../$(JAR_FILE) \
 	-specDirectory ../api \
 	-specVersion $(RELEASE_VERSION) \
@@ -38,14 +38,14 @@ CODEGEN_DEPENDENCIES += api/openapi/openapi.yaml
 CODEGEN_DEPENDENCIES += registry/DSP8011_$(RELEASE_VERSION).pdf
 CODEGEN_DEPENDENCIES += $(JAR_FILE)
 
-models: redfish-codegen/src/lib.rs
+models: redfish-models/src/lib.rs
 routing: redfish-axum/src/lib.rs
 
-redfish-codegen/src/lib.rs: $(CODEGEN_DEPENDENCIES)
-	$(call redfish_codegen,redfish-codegen,models)
+redfish-models/src/lib.rs: $(CODEGEN_DEPENDENCIES)
+	$(call redfish_models,redfish-models,models)
 
 redfish-axum/src/lib.rs: $(CODEGEN_DEPENDENCIES)
-	$(call redfish_codegen,redfish-axum,routing)
+	$(call redfish_models,redfish-axum,routing)
 
 # Schema
 

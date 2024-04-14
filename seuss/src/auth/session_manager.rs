@@ -1,5 +1,5 @@
 use chrono::{DateTime, Local};
-use redfish_codegen::{
+use redfish_models::{
     models::{odata_v4, redfish, resource, session::v1_6_0},
     registries::base::v1_16_0::Base,
 };
@@ -83,7 +83,7 @@ where
         &self,
         token: String,
         origin: Option<String>,
-    ) -> Result<AuthenticatedUser, redfish_codegen::models::redfish::Error> {
+    ) -> Result<AuthenticatedUser, redfish_models::models::redfish::Error> {
         let sessions = self.sessions.lock().unwrap();
         let session = sessions
             .get(&token)

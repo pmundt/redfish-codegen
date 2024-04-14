@@ -5,7 +5,7 @@ implementation of Redfish services.
 
 Currently, the only macro present in this repository is the macro
 `IntoRedfishMessage`, which provides an implementation of
-`Into<redfish_codegen::models::message::<version>::Message>`. This is helpful,
+`Into<redfish_models::models::message::<version>::Message>`. This is helpful,
 for example, for Redfish implementors who choose to create their own
 registries. It requires one attribute on an `enum`, and four attributes on each
 variant, as shown below:

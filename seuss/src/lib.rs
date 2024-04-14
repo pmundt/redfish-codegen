@@ -1,5 +1,5 @@
 //! Seuss is a set of components and entities for implementing Redfish-compliant services. This
-//! crate combines the [redfish_codegen] and [redfish_axum] crates--which are generated
+//! crate combines the [redfish_models] and [redfish_axum] crates--which are generated
 //! programmatically from the Redfish schema bundle and standard registries--with some basic
 //! implementations of common services and components to provide a batteries-included suite of
 //! tools for implementing Redfish compliant services on POSIX and non-POSIX systems.
@@ -20,7 +20,7 @@ pub mod router;
 mod model;
 pub use model::*;
 
-pub use redfish_codegen::*;
+pub use redfish_models::*;
 
 /// Re-exports from [redfish_axum].
 pub mod components {

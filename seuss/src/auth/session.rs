@@ -1,5 +1,5 @@
 use axum::{http::request::Parts, response::Response};
-use redfish_codegen::models::{odata_v4, redfish, session::v1_6_0};
+use redfish_models::models::{odata_v4, redfish, session::v1_6_0};
 use redfish_core::auth::{
     unauthorized, unauthorized_with_error, AuthenticateRequest, AuthenticatedUser,
 };
