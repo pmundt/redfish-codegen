@@ -1,7 +1,7 @@
 package com.twardyece.dmtf.model;
 
 import com.twardyece.dmtf.CratePath;
-import com.twardyece.dmtf.model.mapper.NamespaceMapper;
+import com.twardyece.dmtf.model.mapper.IModelModelMapper;
 import com.twardyece.dmtf.rust.RustConfig;
 import com.twardyece.dmtf.rust.RustType;
 import com.twardyece.dmtf.model.mapper.IModelTypeMapper;
@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
 
 public class ModelResolver {
     private final IModelTypeMapper[] mappers;
-    private final NamespaceMapper[] namespaceMappers;
+    private final IModelModelMapper[] namespaceMappers;
     private final RustTypeFactory rustTypeFactory;
     private static final Logger LOGGER = LoggerFactory.getLogger(ModelResolver.class);
     private static final PascalCaseName VEC_NAME = new PascalCaseName("Vec");
@@ -35,7 +35,7 @@ public class ModelResolver {
     }
 
 
-    public ModelResolver(IModelTypeMapper[] mappers, NamespaceMapper[] namespaceMappers) {
+    public ModelResolver(IModelTypeMapper[] mappers, IModelModelMapper[] namespaceMappers) {
         this.mappers = mappers;
         this.namespaceMappers = namespaceMappers;
         this.rustTypeFactory = new RustTypeFactory();
@@ -68,7 +68,7 @@ public class ModelResolver {
      * @return The corresponding Rust type.
      */
     public RustType resolvePath(String name) {
-        for (NamespaceMapper namespaceMapper : namespaceMappers) {
+        for (IModelModelMapper namespaceMapper : namespaceMappers) {
             Optional<String> match = namespaceMapper.match(name);
             if (match.isPresent()) {
                 name = match.get();

@@ -72,16 +72,16 @@ public class RedfishCodegen {
                 Pattern.compile("odata-v4_(?<model>[a-zA-Z0-9]*)"), "model");
 
         // Model generation setup
-        IModelTypeMapper[] modelMappers = new IModelTypeMapper[4];
-        modelMappers[0] = new VersionedModelTypeMapper();
-        modelMappers[1] = new SimpleModelTypeMapper(redfishModelIdentifierFactory, new SnakeCaseName("redfish"));
-        modelMappers[2] = new SimpleModelTypeMapper(odataModelIdentifierFactory, new SnakeCaseName("odata_v4"));
-        modelMappers[3] = new UnversionedModelTypeMapper();
+        IModelTypeMapper[] typeMappers = new IModelTypeMapper[4];
+        typeMappers[0] = new VersionedModelTypeMapper();
+        typeMappers[1] = new SimpleModelTypeMapper(redfishModelIdentifierFactory, new SnakeCaseName("redfish"));
+        typeMappers[2] = new SimpleModelTypeMapper(odataModelIdentifierFactory, new SnakeCaseName("odata_v4"));
+        typeMappers[3] = new UnversionedModelTypeMapper();
 
-        NamespaceMapper[] namespaceMappers = new NamespaceMapper[1];
+        IModelModelMapper[] modelMappers = new IModelModelMapper[1];
         Pattern odataModelPattern = Pattern.compile("odata_v?4_0_[0-9]_");
-        namespaceMappers[0] = new NamespaceMapper(odataModelPattern, "odata-v4_");
-        this.modelResolver = new ModelResolver(modelMappers, namespaceMappers);
+        modelMappers[0] = new NamespaceMapper(odataModelPattern, "odata-v4_");
+        this.modelResolver = new ModelResolver(typeMappers, modelMappers);
         IModelContextFactory[] factories = new IModelContextFactory[6];
         factories[0] = new EnumContextFactory();
         factories[1] = new FreeFormObjectContextFactory();
