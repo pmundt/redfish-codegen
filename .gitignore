@@ -1,5 +1,6 @@
-/api/
+/DSP8010_2024.2/
 /registry/
+/swordfish/
 /*.zip
 /Cargo.lock
 /target/
