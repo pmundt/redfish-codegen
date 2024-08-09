@@ -52,6 +52,7 @@ import java.util.stream.Collectors;
 public class RedfishCodegen {
     private final String specVersion;
     private final String specDirectory;
+    private final boolean clientMode;
     private final ModelResolver modelResolver;
     private final ComponentMatchService componentMatchService;
     private final IModelGenerationPolicy[] modelGenerationPolicies;
@@ -60,9 +61,10 @@ public class RedfishCodegen {
     private final RegistryFileDiscovery registryFileDiscovery;
     static final Logger LOGGER = LoggerFactory.getLogger(RedfishCodegen.class);
 
-    RedfishCodegen(String specDirectory, String specVersion, String registryDirectory) throws IOException {
+    RedfishCodegen(String specDirectory, String specVersion, String registryDirectory, boolean clientMode) throws IOException {
         this.specDirectory = specDirectory;
         this.specVersion = specVersion;
+        this.clientMode = clientMode;
 
         SimpleModelIdentifierFactory redfishModelIdentifierFactory = new SimpleModelIdentifierFactory(
                 Pattern.compile("Redfish(?<model>[a-zA-Z0-9]*)"), "model",
@@ -100,7 +102,7 @@ public class RedfishCodegen {
         // coupled to context factories.
         this.modelGenerationPolicies = new IModelGenerationPolicy[4];
         this.modelGenerationPolicies[0] = new ModelDeletionPolicy(Pattern.compile(odataModelPattern + "|.*_(EventRecord)?Oem(Actions)?"));
-        this.modelGenerationPolicies[1] = new ODataPropertyPolicy(new ODataTypeIdentifier());
+        this.modelGenerationPolicies[1] = new ODataPropertyPolicy(new ODataTypeIdentifier(), this.clientMode);
         JsonSchemaMapper[] jsonSchemaMappers = new JsonSchemaMapper[2];
 
         Pattern versionParsePattern = Pattern.compile("([0-9]+)_([0-9]+)_([0-9]+)");
@@ -382,12 +384,15 @@ public class RedfishCodegen {
         registryDirectoryOption.setRequired(true);
         Option componentOption = new Option("component", true, "Data model component to generate");
         componentOption.setRequired(true);
+        Option clientModeOption = new Option("clientMode", false, "Generate models for redfish clients");
+        clientModeOption.setRequired(false);
 
         Options options = new Options();
         options.addOption(specDirectoryOption);
         options.addOption(crateDirectoryOption);
         options.addOption(registryDirectoryOption);
         options.addOption(componentOption);
+        options.addOption(clientModeOption);
 
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
@@ -399,8 +404,9 @@ public class RedfishCodegen {
             String specVersion = command.getOptionValue("specVersion");
             String registryDirectory = command.getOptionValue("registryDirectory");
             String component = command.getOptionValue("component");
+            boolean clientMode = command.hasOption("clientMode");
 
-            RedfishCodegen codegen = new RedfishCodegen(specDirectory, specVersion, registryDirectory);
+            RedfishCodegen codegen = new RedfishCodegen(specDirectory, specVersion, registryDirectory, clientMode);
             codegen.generate(component);
         } catch (ParseException e) {
             System.out.println(e.getMessage());

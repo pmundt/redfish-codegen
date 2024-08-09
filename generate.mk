@@ -26,12 +26,16 @@ OPENAPI_DOCUMENT=api/openapi/openapi.yaml
 JAR_FILE=redfish-generator/target/redfish-codegen-0.3.1-SNAPSHOT.jar
 JVM_ARGS=-DmaxYamlCodePoints=6291456 -Dfile.encoding=UTF-8
 
+ifdef CARGO_FEATURE_CLIENT
+JAR_ARGS += -clientMode
+endif
+
 define redfish_models
 (cd $1 && java $(JVM_ARGS) -jar ../$(JAR_FILE) \
 	-specDirectory ../api \
 	-specVersion $(RELEASE_VERSION) \
 	-registryDirectory ../registry \
-	-component $2)
+	-component $2 $(JAR_ARGS))
 endef
 
 CODEGEN_DEPENDENCIES += api/openapi/openapi.yaml

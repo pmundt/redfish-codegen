@@ -13,8 +13,10 @@ public class ODataPropertyPolicy implements IModelGenerationPolicy {
     private ODataTypeIdentifier identifier;
     private static final List<String> immutableProperties;
     private static final String ODATA_TYPE = "#/components/schemas/odata-v4_type";
-    public ODataPropertyPolicy(ODataTypeIdentifier identifier) {
+    private boolean alwaysDeserialize;
+    public ODataPropertyPolicy(ODataTypeIdentifier identifier, boolean alwaysDeserialize) {
         this.identifier = identifier;
+        this.alwaysDeserialize = alwaysDeserialize;
     }
 
     static {
@@ -34,9 +36,10 @@ public class ODataPropertyPolicy implements IModelGenerationPolicy {
             StructContext struct = entry.getValue().getContext().structContext;
             if (null != struct) {
                 for (StructContext.Property property : struct.properties) {
-                    // If the property.openapiType matches one of the few immutable properties, skip deserialization
+                    // If the property.openapiType matches one of the few immutable properties, and we are not
+                    // required to deserialize all properties, skip deserialization.
                     String openapiType = property.getOpenapiType();
-                    if (null != openapiType && !isDeserialized(openapiType)) {
+                    if (null != openapiType && !this.alwaysDeserialize && isImmutable(openapiType)) {
                         property.setIsDeserialized(false);
                     }
 
@@ -50,11 +53,7 @@ public class ODataPropertyPolicy implements IModelGenerationPolicy {
         }
     }
 
-    private static boolean isDeserialized(String propertyType) {
-        if (immutableProperties.contains(propertyType)) {
-            return false;
-        } else {
-            return true;
-        }
+    private static boolean isImmutable(String propertyType) {
+	return immutableProperties.contains(propertyType);
     }
 }
