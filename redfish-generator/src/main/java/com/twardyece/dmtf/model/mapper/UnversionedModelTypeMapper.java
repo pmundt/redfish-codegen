@@ -24,14 +24,4 @@ public class UnversionedModelTypeMapper implements IModelTypeMapper {
             return Optional.empty();
         }
     }
-
-    @Override
-    public Optional<String> matchesName(ModelMatchSpecification model) {
-        if (model.path().isEmpty()) {
-            return Optional.empty();
-        }
-
-        PascalCaseName module = new PascalCaseName(model.path().get(model.path().size() - 1));
-        return Optional.of(UnversionedSchemaIdentifier.schemaIdentifier(module, model.model()));
-    }
 }

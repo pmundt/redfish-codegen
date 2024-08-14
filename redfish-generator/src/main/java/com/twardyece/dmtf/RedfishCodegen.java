@@ -67,11 +67,9 @@ public class RedfishCodegen {
         this.clientMode = clientMode;
 
         SimpleModelIdentifierFactory redfishModelIdentifierFactory = new SimpleModelIdentifierFactory(
-                Pattern.compile("Redfish(?<model>[a-zA-Z0-9]*)"), "model",
-                name -> "Redfish" + name);
+                Pattern.compile("Redfish(?<model>[a-zA-Z0-9]*)"), "model");
         SimpleModelIdentifierFactory odataModelIdentifierFactory = new SimpleModelIdentifierFactory(
-                Pattern.compile("odata-v4_(?<model>[a-zA-Z0-9]*)"), "model",
-                name -> "odata-v4_" + new CamelCaseName(name));
+                Pattern.compile("odata-v4_(?<model>[a-zA-Z0-9]*)"), "model");
 
         // Model generation setup
         IModelTypeMapper[] modelMappers = new IModelTypeMapper[4];
@@ -92,8 +90,7 @@ public class RedfishCodegen {
         SimpleModelIdentifierFactory[] identifierParsers = new SimpleModelIdentifierFactory[2];
         identifierParsers[0] = odataModelIdentifierFactory;
         identifierParsers[1] = new SimpleModelIdentifierFactory(
-                Pattern.compile("^Resource_(?<model>[a-zA-Z0-9]*)$"), "model",
-                name -> "Resource_" + name);
+                Pattern.compile("^Resource_(?<model>[a-zA-Z0-9]*)$"), "model");
         factories[4] = new UnionContextFactory(this.modelResolver, new UnionVariantParser(identifierParsers));
         factories[5] = new UnitContextFactory();
         this.fileFactory = new FileFactory(new DefaultMustacheFactory(), factories);

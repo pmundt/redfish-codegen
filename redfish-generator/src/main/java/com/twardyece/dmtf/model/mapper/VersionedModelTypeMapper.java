@@ -25,21 +25,4 @@ public class VersionedModelTypeMapper implements IModelTypeMapper {
             return Optional.empty();
         }
     }
-
-    @Override
-    public Optional<String> matchesName(ModelMatchSpecification model) {
-        List<SnakeCaseName> path = model.path();
-        int pathSize = path.size();
-        if (pathSize < 2) {
-            return Optional.empty();
-        }
-
-        SnakeCaseName version = path.get(pathSize - 1);
-        if (!VersionedSchemaIdentifier.isVersion(version.toString())) {
-            return Optional.empty();
-        }
-
-        SnakeCaseName namespace = path.get(pathSize - 2);
-        return Optional.of(VersionedSchemaIdentifier.identifier(new PascalCaseName(namespace), version, model.model()));
-    }
 }

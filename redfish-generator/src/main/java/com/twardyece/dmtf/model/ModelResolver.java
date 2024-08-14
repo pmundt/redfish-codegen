@@ -24,6 +24,8 @@ public class ModelResolver {
     public static final Map<String, RustType> RUST_TYPE_MAP;
     private static final Pattern schemaPath = Pattern.compile("#/components/schemas/");
 
+    private HashMap<String, IModelTypeMapper.ModelMatchSpecification> models;
+
     static {
         RUST_TYPE_MAP = new HashMap<>();
         RUST_TYPE_MAP.put("integer", new RustType(new SnakeCaseName("i64")));
@@ -37,6 +39,7 @@ public class ModelResolver {
         this.mappers = mappers;
         this.namespaceMappers = namespaceMappers;
         this.rustTypeFactory = new RustTypeFactory();
+        this.models = new HashMap<>();
     }
 
     /**
@@ -75,6 +78,7 @@ public class ModelResolver {
         for (IModelTypeMapper mapper : this.mappers) {
             Optional<IModelTypeMapper.ModelMatchSpecification> module = mapper.matchesType(name);
             if (module.isPresent()) {
+                this.models.put(name, module.get());
                 return rustTypeFactory.toRustType(module.get());
             }
         }
@@ -91,14 +95,7 @@ public class ModelResolver {
         // TODO: Today, namespace mapping is only necessary for forward resolution. This indicates a bit of potential
         //  fragility in the model resolution system that should be addressed.
         IModelTypeMapper.ModelMatchSpecification modelMatchSpecification = rustTypeFactory.toModelMatchSpecification(rustType);
-        for (IModelTypeMapper mapper : this.mappers) {
-            Optional<String> identifier = mapper.matchesName(modelMatchSpecification);
-            if (identifier.isPresent()) {
-                return identifier.get();
-            }
-        }
-
-        return null;
+        return this.models.entrySet().stream().filter(entry -> entry.getValue().equals(modelMatchSpecification)).findFirst().get().getKey();
     }
 
     /**
