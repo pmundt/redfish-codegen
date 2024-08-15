@@ -324,7 +324,7 @@ public class RedfishCodegen {
         Map<String, ModuleFile<ModelContext>> models = this.buildModels();
 
         RustType messageType = this.getMessageType(models);
-        RustType health = this.modelResolver.resolvePath("#/components/schemas/Resource_Health");
+        RustType health = this.modelResolver.resolvePath("Resource_Health");
         RegistryFactory factory = new RegistryFactory(messageType, health);
         Map<PascalCaseName, RegistryContext> registries = this.buildRegistries(factory);
         switch (component) {
