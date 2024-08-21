@@ -65,6 +65,7 @@ impl Default for {{name}} {
 
 impl std::fmt::Display for {{name}} {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        #[allow(unused_imports)]
         use {{name}}::*;
         match self {
 {{#variants}}
