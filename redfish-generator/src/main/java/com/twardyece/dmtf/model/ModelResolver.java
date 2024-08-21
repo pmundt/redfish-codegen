@@ -124,7 +124,7 @@ public class ModelResolver {
      * to instances of RustType. It's not a complicated conversion, which is why it lives here. In the future, we can
      * move this class elsewhere if more configuration is required, so that it can be injected to the ModelResolver.
      */
-    private class RustTypeFactory {
+    public static class RustTypeFactory {
         public RustTypeFactory() {}
 
         /**

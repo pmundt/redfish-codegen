@@ -18,7 +18,6 @@ import com.twardyece.dmtf.rust.RustConfig;
 import com.twardyece.dmtf.rust.RustType;
 import com.twardyece.dmtf.specification.*;
 import com.twardyece.dmtf.specification.file.DirectoryFileList;
-import com.twardyece.dmtf.text.CamelCaseName;
 import com.twardyece.dmtf.text.CaseConversion;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
@@ -71,12 +70,23 @@ public class RedfishCodegen {
         SimpleModelIdentifierFactory odataModelIdentifierFactory = new SimpleModelIdentifierFactory(
                 Pattern.compile("odata-v4_(?<model>[a-zA-Z0-9]*)"), "model");
 
+        ModelResolver.RustTypeFactory rustTypeFactory = new ModelResolver.RustTypeFactory();
+        Map<String, IModelTypeMapper.ModelMatchSpecification> inlineSchemas = new HashMap<>();
+        inlineSchemas.put("RedfishError_error", rustTypeFactory.toModelMatchSpecification(
+                new RustType(CratePath.parse("::redfish"), new PascalCaseName("RedfishError"))));
+        inlineSchemas.put("_redfish_v1_odata_get_200_response", rustTypeFactory.toModelMatchSpecification(
+                new RustType(CratePath.parse("::odata_v4"), new PascalCaseName("ServiceDocument"))));
+        inlineSchemas.put("_redfish_v1_odata_get_200_response_value", rustTypeFactory.toModelMatchSpecification(
+                new RustType(CratePath.parse("::odata_v4"), new PascalCaseName("Service"))));
+        PromotedSchemaModelTypeMapper promotedSchemaModelTypeMapper = new PromotedSchemaModelTypeMapper(inlineSchemas);
+
         // Model generation setup
-        IModelTypeMapper[] typeMappers = new IModelTypeMapper[4];
-        typeMappers[0] = new VersionedModelTypeMapper();
-        typeMappers[1] = new SimpleModelTypeMapper(redfishModelIdentifierFactory, new SnakeCaseName("redfish"));
-        typeMappers[2] = new SimpleModelTypeMapper(odataModelIdentifierFactory, new SnakeCaseName("odata_v4"));
-        typeMappers[3] = new UnversionedModelTypeMapper();
+        IModelTypeMapper[] typeMappers = new IModelTypeMapper[5];
+        typeMappers[0] = promotedSchemaModelTypeMapper;
+        typeMappers[1] = new VersionedModelTypeMapper();
+        typeMappers[2] = new SimpleModelTypeMapper(redfishModelIdentifierFactory, new SnakeCaseName("redfish"));
+        typeMappers[3] = new SimpleModelTypeMapper(odataModelIdentifierFactory, new SnakeCaseName("odata_v4"));
+        typeMappers[4] = new UnversionedModelTypeMapper();
 
         IModelModelMapper[] modelMappers = new IModelModelMapper[1];
         Pattern odataModelPattern = Pattern.compile("odata_v?4_0_[0-9]_");
@@ -155,7 +165,8 @@ public class RedfishCodegen {
         Pattern[] ignoredSchemaFiles = new Pattern[2];
         ignoredSchemaFiles[0] = Pattern.compile("^odata.*$");
         ignoredSchemaFiles[1] = Pattern.compile("^redfish-payload-annotations-.*$");
-        OpenapiSpecification specification = new OpenapiSpecification(Path.of(specDirectory), ignoredSchemaFiles);
+        OpenapiSpecification specification = new OpenapiSpecification(Path.of(specDirectory), ignoredSchemaFiles,
+                promotedSchemaModelTypeMapper);
         this.document = specification.getRedfishDataModel();
     }
 
