@@ -46,11 +46,10 @@ public class ModelResolver {
      * Obtain just the schema identifier from the OpenAPI path. For example, converts
      * #/components/schemas/Message_v1_1_2_Message to Message_v1_1_2_Message. Throws RuntimeException if the Schema does
      * not contain a valid $ref.
-     * @param schema The schema containing the path
+     * @param url The full path
      * @return the Redfish schema identifier.
      */
-    public static String getSchemaIdentifier(Schema schema) {
-        String url = schema.get$ref();
+    public static String getSchemaIdentifier(String url) {
         // TODO: There's a faster way to do this than pattern matching.
         Matcher matcher = schemaPath.matcher(url);
         if (!matcher.find()) {
@@ -108,7 +107,7 @@ public class ModelResolver {
     public RustType resolveSchema(Schema schema) {
         String type = schema.getType();
         if (null == type) {
-            return this.resolvePath(getSchemaIdentifier(schema));
+            return this.resolvePath(getSchemaIdentifier(schema.get$ref()));
         } else if ("array".equals(schema.getType())) {
             // It's an array type
             return new RustType(CratePath.empty(), VEC_NAME, new RustType[]{this.resolveSchema(schema.getItems())});

@@ -34,7 +34,7 @@ public class UnionContextFactory implements IModelContextFactory {
 
         for (Object object : schema.getAnyOf()) {
             Schema variant = (Schema)object;
-            String identifier = ModelResolver.getSchemaIdentifier(variant);
+            String identifier = ModelResolver.getSchemaIdentifier(variant.get$ref());
             RustIdentifier value = this.variantParser.getVariantName(identifier);
             variants.add(new EnumContext.Variant(value,
                     new EnumContext.Variant.Type(this.modelResolver.resolveSchema(variant)),
