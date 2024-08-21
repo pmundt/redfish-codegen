@@ -105,6 +105,11 @@ public class ModelResolver {
      * @return A Rust type corresponding to the OpenAPI schema object.
      */
     public RustType resolveSchema(Schema schema) {
+        Optional<RustType> rustType = InlineSchemaResolver.resolveInlineOptionalSchema(schema, this);
+        if (rustType.isPresent()) {
+            return rustType.get();
+        }
+
         String type = schema.getType();
         if (null == type) {
             return this.resolvePath(getSchemaIdentifier(schema.get$ref()));
