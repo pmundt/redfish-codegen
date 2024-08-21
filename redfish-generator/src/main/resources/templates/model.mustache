@@ -83,6 +83,7 @@ impl std::fmt::Display for {{name}} {
 pub struct {{name}}(pub {{type}});
 {{/tupleContext}}
 {{#unitContext}}
+#[derive(Default)]
 pub struct {{name}};
 {{/unitContext}}
 {{#metadata}}
