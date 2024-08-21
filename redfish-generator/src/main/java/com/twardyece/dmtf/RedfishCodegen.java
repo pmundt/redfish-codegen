@@ -70,6 +70,10 @@ public class RedfishCodegen {
         SimpleModelIdentifierFactory odataModelIdentifierFactory = new SimpleModelIdentifierFactory(
                 Pattern.compile("odata-v4_(?<model>[a-zA-Z0-9]*)"), "model");
 
+        // Pattern describing schemas which may be erroneously generated as duplicates of other schemas. See
+        // swagger-api/swagger-parser#1961.
+        Pattern duplicatedSchemas = Pattern.compile("_1$");
+
         ModelResolver.RustTypeFactory rustTypeFactory = new ModelResolver.RustTypeFactory();
         Map<String, IModelTypeMapper.ModelMatchSpecification> inlineSchemas = new HashMap<>();
         inlineSchemas.put("RedfishError_error", rustTypeFactory.toModelMatchSpecification(
@@ -88,9 +92,11 @@ public class RedfishCodegen {
         typeMappers[3] = new SimpleModelTypeMapper(odataModelIdentifierFactory, new SnakeCaseName("odata_v4"));
         typeMappers[4] = new UnversionedModelTypeMapper();
 
-        IModelModelMapper[] modelMappers = new IModelModelMapper[1];
+        IModelModelMapper[] modelMappers = new IModelModelMapper[2];
         Pattern odataModelPattern = Pattern.compile("odata_v?4_0_[0-9]_");
         modelMappers[0] = new NamespaceMapper(odataModelPattern, "odata-v4_");
+        modelMappers[1] = new NamespaceMapper(duplicatedSchemas, "");
+
         this.modelResolver = new ModelResolver(typeMappers, modelMappers);
         IModelContextFactory[] factories = new IModelContextFactory[6];
         factories[0] = new EnumContextFactory();
@@ -107,9 +113,10 @@ public class RedfishCodegen {
 
         // These intrusive/low-level policies need to be applied to the set of models as a whole, but should not be
         // coupled to context factories.
-        this.modelGenerationPolicies = new IModelGenerationPolicy[4];
+        this.modelGenerationPolicies = new IModelGenerationPolicy[5];
         this.modelGenerationPolicies[0] = new ModelDeletionPolicy(Pattern.compile(odataModelPattern + "|.*_(EventRecord)?Oem(Actions)?"));
-        this.modelGenerationPolicies[1] = new ODataPropertyPolicy(new ODataTypeIdentifier(), this.clientMode);
+        this.modelGenerationPolicies[1] = new ModelDeletionPolicy(duplicatedSchemas, false);
+        this.modelGenerationPolicies[2] = new ODataPropertyPolicy(new ODataTypeIdentifier(), this.clientMode);
         JsonSchemaMapper[] jsonSchemaMappers = new JsonSchemaMapper[2];
 
         Pattern versionParsePattern = Pattern.compile("([0-9]+)_([0-9]+)_([0-9]+)");
@@ -131,8 +138,8 @@ public class RedfishCodegen {
         jsonSchemaMappers[1] = new JsonSchemaMapper(
                 odataModelIdentifierFactory,
                 odataJsonSchema.get().file.getFileName().toString());
-        this.modelGenerationPolicies[2] = new ModelMetadataPolicy(new JsonSchemaIdentifier(jsonSchemaMappers));
-        this.modelGenerationPolicies[3] = new AdditionalModelAttributesPolicy(
+        this.modelGenerationPolicies[3] = new ModelMetadataPolicy(new JsonSchemaIdentifier(jsonSchemaMappers));
+        this.modelGenerationPolicies[4] = new AdditionalModelAttributesPolicy(
                 Pattern.compile("^(Event|Message)_v[0-9_]+(Event|Message)$"),
                 CfgAttrExpression.withEqualityPredicate("feature", "\"valuable\"")
                         .attribute("derive(valuable::Valuable)")
