@@ -28,4 +28,9 @@ public class UnversionedSchemaIdentifier {
     public static String schemaIdentifier(PascalCaseName module, PascalCaseName model) {
         return module + "_" + model;
     }
+
+    @Override
+    public String toString() {
+        return schemaIdentifier(this.module, this.model);
+    }
 }
