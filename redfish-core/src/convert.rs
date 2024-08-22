@@ -1,4 +1,7 @@
-use redfish_models::{models::{message::v1_1_2::Message, event::v1_8_0::EventRecord}, Registry};
+use redfish_models::{
+    models::{event::v1_10_1::EventRecord, message::v1_2_1::Message},
+    Registry,
+};
 
 pub trait IntoRedfishMessage {
     fn into_redfish_message(self) -> Message;

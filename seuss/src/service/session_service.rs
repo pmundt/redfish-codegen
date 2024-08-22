@@ -8,9 +8,9 @@ use axum::{
 };
 use redfish_axum::{session::Session, session_collection::SessionCollection};
 use redfish_models::models::{
-    odata_v4, resource, session::v1_6_0::Session as SessionModel,
+    odata_v4, resource, session::v1_7_2::Session as SessionModel,
     session_collection::SessionCollection as SessionCollectionModel,
-    session_service::v1_1_8::SessionService as SessionServiceModel,
+    session_service::v1_1_9::SessionService as SessionServiceModel,
 };
 use redfish_core::auth::AuthenticateRequest;
 

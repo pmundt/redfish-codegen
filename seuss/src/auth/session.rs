@@ -1,5 +1,5 @@
 use axum::{http::request::Parts, response::Response};
-use redfish_models::models::{odata_v4, redfish, session::v1_6_0};
+use redfish_models::models::{odata_v4, redfish, session::v1_7_2};
 use redfish_core::auth::{
     unauthorized, unauthorized_with_error, AuthenticateRequest, AuthenticatedUser,
 };
@@ -14,10 +14,10 @@ pub trait SessionManagement {
     fn sessions(&self) -> Result<Vec<odata_v4::IdRef>, redfish::Error>;
     fn create_session(
         &mut self,
-        session: v1_6_0::Session,
+        session: v1_7_2::Session,
         base_path: String,
-    ) -> Result<v1_6_0::Session, redfish::Error>;
-    fn get_session(&self, id: Self::Id) -> Result<v1_6_0::Session, redfish::Error>;
+    ) -> Result<v1_7_2::Session, redfish::Error>;
+    fn get_session(&self, id: Self::Id) -> Result<v1_7_2::Session, redfish::Error>;
     fn delete_session(&mut self, id: Self::Id) -> Result<(), redfish::Error>;
 }
 
