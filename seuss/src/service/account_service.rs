@@ -3,8 +3,8 @@ use std::str::FromStr;
 use axum::{extract::OriginalUri, response::Response, Extension, Router};
 use redfish_axum::{role::Role, role_collection::RoleCollection};
 use redfish_models::models::{
-    account_service::v1_13_0::AccountService as AccountServiceModel, odata_v4,
-    privileges::PrivilegeType, resource, role::v1_3_1::Role as RoleModel,
+    account_service::v1_15_1::AccountService as AccountServiceModel, odata_v4,
+    privileges::PrivilegeType, resource, role::v1_3_2::Role as RoleModel,
     role_collection::RoleCollection as RoleCollectionModel,
 };
 use redfish_core::{auth::AuthenticateRequest, privilege};

@@ -13,15 +13,18 @@
 ####
 
 RELEASE_LINK=https://www.dmtf.org/sites/default/files/standards/documents
-RELEASE_VERSION=2023.1
-SCHEMA_FILE=DSP8010_$(RELEASE_VERSION).zip
-REGISTRY_FILE=DSP8011_$(RELEASE_VERSION).zip
+REDFISH_VERSION=2024.2
+SCHEMA_FILE=DSP8010_$(REDFISH_VERSION).zip
+REGISTRY_VERSION=2024.1
+REGISTRY_FILE=DSP8011_$(REGISTRY_VERSION).zip
 
-SWORDFISH_VERSION=v1.2.4a
+B=DSP8010_$(REDFISH_VERSION)
+
+SWORDFISH_VERSION=v1.2.6
 SWORDFISH_SCHEMA_FILE=Swordfish_$(SWORDFISH_VERSION)_Schema.zip
 SWORDFISH_LINK=https://www.snia.org/sites/default/files/technical-work/swordfish/release/$(SWORDFISH_VERSION)/zip/$(SWORDFISH_SCHEMA_FILE)
 
-OPENAPI_DOCUMENT=api/openapi/openapi.yaml
+OPENAPI_DOCUMENT=$(B)/openapi/openapi.yaml
 
 JAR_FILE=redfish-generator/target/redfish-codegen-0.3.1-SNAPSHOT.jar
 JVM_ARGS=-DmaxYamlCodePoints=6291456 -Dfile.encoding=UTF-8
@@ -32,14 +35,14 @@ endif
 
 define redfish_models
 (cd $1 && java $(JVM_ARGS) -jar ../$(JAR_FILE) \
-	-specDirectory ../api \
-	-specVersion $(RELEASE_VERSION) \
+	-specDirectory ../$(B) \
+	-specVersion $(REDFISH_VERSION) \
 	-registryDirectory ../registry \
 	-component $2 $(JAR_ARGS))
 endef
 
-CODEGEN_DEPENDENCIES += api/openapi/openapi.yaml
-CODEGEN_DEPENDENCIES += registry/DSP8011_$(RELEASE_VERSION).pdf
+CODEGEN_DEPENDENCIES += $(B)/openapi/openapi.yaml
+CODEGEN_DEPENDENCIES += registry/DSP8011_$(REGISTRY_VERSION).pdf
 CODEGEN_DEPENDENCIES += $(JAR_FILE)
 
 models: redfish-models/src/lib.rs
@@ -65,38 +68,38 @@ SCHEMA_FILES += $(REGISTRY_FILE)
 
 get-schema: $(SCHEMA_FILES)
 
-api/.unzip.lock: $(SCHEMA_FILES)
-	unzip -o -DD -d api $(SCHEMA_FILE)
+$(B)/.unzip.lock: $(SCHEMA_FILES)
+	unzip -o -DD $(SCHEMA_FILE)
 	: # Unzip from the swordfish distribution only those files which are
 	: # not included in the Redfish distribution.
-	unzip -n -DD -d api $(SWORDFISH_SCHEMA_FILE)
-	mv --update=none api/yaml/* api/openapi/
+	unzip -n -DD -d swordfish $(SWORDFISH_SCHEMA_FILE)
+	mv --update=none swordfish/yaml/* $(B)/openapi/
 	unzip -o -DD -d registry $(REGISTRY_FILE)
 	touch $@
 
-unzip: api/.unzip.lock
+unzip: DSP8010_$(REDFISH_VERSION)/.unzip.lock
 
-api/openapi/openapi.yaml: api/.unzip.lock
+$(B)/openapi/openapi.yaml: $(B)/.unzip.lock
 	-if [ -f schema-patches/series ]; then \
-		QUILT_PC=api/.pc QUILT_PATCHES=schema-patches quilt push -a --leave-rejects; \
+		QUILT_PC=$(B)/.pc QUILT_PATCHES=schema-patches quilt push -a --leave-rejects; \
 	fi
-	sed -i -e 's#http://redfish.dmtf.org/schemas/v1#.#' api/openapi/*.yaml
+	sed -i -e 's#http://redfish.dmtf.org/schemas/v1#.#' $(B)/openapi/*.yaml
 	sed -i -e 's#http://redfish.dmtf.org/schemas/swordfish/v1#.#' \
-		api/openapi/*.yaml
+		$(B)/openapi/*.yaml
 
 clean:
-	rm -rf api registry
+	rm -rf $(B) registry swordfish
 
 # Registry
 
 $(REGISTRY_FILE):
 	curl -L -O $(RELEASE_LINK)/$(REGISTRY_FILE)
 
-registry/DSP8011_$(RELEASE_VERSION).pdf: api/.unzip.lock
+registry/DSP8011_$(REGISTRY_VERSION).pdf: $(B)/.unzip.lock
 	-QUILT_PC=registry/.pc QUILT_PATCHES=registry-patches quilt push -a
 	touch $@
 
-prepare: registry/DSP8011_$(RELEASE_VERSION).pdf api/openapi/openapi.yaml
+prepare: registry/DSP8011_$(REGISTRY_VERSION).pdf $(B)/openapi/openapi.yaml
 
 # Jar
 

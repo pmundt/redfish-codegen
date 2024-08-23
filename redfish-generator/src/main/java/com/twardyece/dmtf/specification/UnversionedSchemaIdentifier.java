@@ -10,7 +10,7 @@ public class UnversionedSchemaIdentifier {
     private final PascalCaseName model;
 
     // This regular expression identifies models in the OpenAPI document which are not tagged with a version.
-    private static final Pattern pattern = Pattern.compile("(?<module>[a-zA-z0-9]*)_(?<model>[a-zA-Z0-9]+)");
+    private static final Pattern pattern = Pattern.compile("(?<module>[a-zA-Z0-9]*)_(?<model>[a-zA-Z0-9]+)");
 
     public UnversionedSchemaIdentifier(String name) {
         Matcher matcher = pattern.matcher(name);
@@ -27,5 +27,10 @@ public class UnversionedSchemaIdentifier {
 
     public static String schemaIdentifier(PascalCaseName module, PascalCaseName model) {
         return module + "_" + model;
+    }
+
+    @Override
+    public String toString() {
+        return schemaIdentifier(this.module, this.model);
     }
 }

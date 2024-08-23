@@ -42,4 +42,9 @@ public class VersionedSchemaIdentifier {
         Matcher matcher = VERSION_PATTERN.matcher(content);
         return matcher.find();
     }
+
+    @Override
+    public String toString() {
+        return identifier(this.module, this.version, this.model);
+    }
 }

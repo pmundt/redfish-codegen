@@ -16,4 +16,5 @@ pub mod resource_event;
 pub mod sensor_event;
 pub mod storage_device;
 pub mod task_event;
+pub mod telemetry;
 pub mod update;

@@ -1,5 +1,7 @@
 package com.twardyece.dmtf.specification;
 
+import com.twardyece.dmtf.text.ICaseConvertible;
+
 import java.util.Optional;
 
 public class JsonSchemaIdentifier {
@@ -20,9 +22,13 @@ public class JsonSchemaIdentifier {
         try {
             VersionedSchemaIdentifier versioned = new VersionedSchemaIdentifier(identifier);
             return Optional.of(versioned.getModule() + "." + versioned.getVersion() + ".json");
-        } catch (IdentifierParseError e) {
-            UnversionedSchemaIdentifier unversioned = new UnversionedSchemaIdentifier(identifier);
-            return Optional.of(unversioned.getModule() + ".json");
+        } catch (IdentifierParseError | ICaseConvertible.CaseConversionError e) {
+            try {
+                UnversionedSchemaIdentifier unversioned = new UnversionedSchemaIdentifier(identifier);
+                return Optional.of(unversioned.getModule() + ".json");
+            } catch (IdentifierParseError | ICaseConvertible.CaseConversionError f) {
+                return Optional.empty();
+            }
         }
     }
 }

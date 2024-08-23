@@ -18,7 +18,6 @@ import com.twardyece.dmtf.rust.RustConfig;
 import com.twardyece.dmtf.rust.RustType;
 import com.twardyece.dmtf.specification.*;
 import com.twardyece.dmtf.specification.file.DirectoryFileList;
-import com.twardyece.dmtf.text.CamelCaseName;
 import com.twardyece.dmtf.text.CaseConversion;
 import com.twardyece.dmtf.text.PascalCaseName;
 import com.twardyece.dmtf.text.SnakeCaseName;
@@ -67,23 +66,38 @@ public class RedfishCodegen {
         this.clientMode = clientMode;
 
         SimpleModelIdentifierFactory redfishModelIdentifierFactory = new SimpleModelIdentifierFactory(
-                Pattern.compile("Redfish(?<model>[a-zA-Z0-9]*)"), "model",
-                name -> "Redfish" + name);
+                Pattern.compile("Redfish(?<model>[a-zA-Z0-9]*)"), "model");
         SimpleModelIdentifierFactory odataModelIdentifierFactory = new SimpleModelIdentifierFactory(
-                Pattern.compile("odata-v4_(?<model>[a-zA-Z0-9]*)"), "model",
-                name -> "odata-v4_" + new CamelCaseName(name));
+                Pattern.compile("odata-v4_(?<model>[a-zA-Z0-9]*)"), "model");
+
+        // Pattern describing schemas which may be erroneously generated as duplicates of other schemas. See
+        // swagger-api/swagger-parser#1961.
+        Pattern duplicatedSchemas = Pattern.compile("_1$");
+
+        ModelResolver.RustTypeFactory rustTypeFactory = new ModelResolver.RustTypeFactory();
+        Map<String, IModelTypeMapper.ModelMatchSpecification> inlineSchemas = new HashMap<>();
+        inlineSchemas.put("RedfishError_error", rustTypeFactory.toModelMatchSpecification(
+                new RustType(CratePath.parse("::redfish"), new PascalCaseName("RedfishError"))));
+        inlineSchemas.put("_redfish_v1_odata_get_200_response", rustTypeFactory.toModelMatchSpecification(
+                new RustType(CratePath.parse("::odata_v4"), new PascalCaseName("ServiceDocument"))));
+        inlineSchemas.put("_redfish_v1_odata_get_200_response_value", rustTypeFactory.toModelMatchSpecification(
+                new RustType(CratePath.parse("::odata_v4"), new PascalCaseName("Service"))));
+        PromotedSchemaModelTypeMapper promotedSchemaModelTypeMapper = new PromotedSchemaModelTypeMapper(inlineSchemas);
 
         // Model generation setup
-        IModelTypeMapper[] modelMappers = new IModelTypeMapper[4];
-        modelMappers[0] = new VersionedModelTypeMapper();
-        modelMappers[1] = new SimpleModelTypeMapper(redfishModelIdentifierFactory, new SnakeCaseName("redfish"));
-        modelMappers[2] = new SimpleModelTypeMapper(odataModelIdentifierFactory, new SnakeCaseName("odata_v4"));
-        modelMappers[3] = new UnversionedModelTypeMapper();
+        IModelTypeMapper[] typeMappers = new IModelTypeMapper[5];
+        typeMappers[0] = promotedSchemaModelTypeMapper;
+        typeMappers[1] = new VersionedModelTypeMapper();
+        typeMappers[2] = new SimpleModelTypeMapper(redfishModelIdentifierFactory, new SnakeCaseName("redfish"));
+        typeMappers[3] = new SimpleModelTypeMapper(odataModelIdentifierFactory, new SnakeCaseName("odata_v4"));
+        typeMappers[4] = new UnversionedModelTypeMapper();
 
-        NamespaceMapper[] namespaceMappers = new NamespaceMapper[1];
+        IModelModelMapper[] modelMappers = new IModelModelMapper[2];
         Pattern odataModelPattern = Pattern.compile("odata_v?4_0_[0-9]_");
-        namespaceMappers[0] = new NamespaceMapper(odataModelPattern, "odata-v4_");
-        this.modelResolver = new ModelResolver(modelMappers, namespaceMappers);
+        modelMappers[0] = new NamespaceMapper(odataModelPattern, "odata-v4_");
+        modelMappers[1] = new NamespaceMapper(duplicatedSchemas, "");
+
+        this.modelResolver = new ModelResolver(typeMappers, modelMappers);
         IModelContextFactory[] factories = new IModelContextFactory[6];
         factories[0] = new EnumContextFactory();
         factories[1] = new FreeFormObjectContextFactory();
@@ -92,17 +106,17 @@ public class RedfishCodegen {
         SimpleModelIdentifierFactory[] identifierParsers = new SimpleModelIdentifierFactory[2];
         identifierParsers[0] = odataModelIdentifierFactory;
         identifierParsers[1] = new SimpleModelIdentifierFactory(
-                Pattern.compile("^Resource_(?<model>[a-zA-Z0-9]*)$"), "model",
-                name -> "Resource_" + name);
+                Pattern.compile("^Resource_(?<model>[a-zA-Z0-9]*)$"), "model");
         factories[4] = new UnionContextFactory(this.modelResolver, new UnionVariantParser(identifierParsers));
         factories[5] = new UnitContextFactory();
         this.fileFactory = new FileFactory(new DefaultMustacheFactory(), factories);
 
         // These intrusive/low-level policies need to be applied to the set of models as a whole, but should not be
         // coupled to context factories.
-        this.modelGenerationPolicies = new IModelGenerationPolicy[4];
+        this.modelGenerationPolicies = new IModelGenerationPolicy[5];
         this.modelGenerationPolicies[0] = new ModelDeletionPolicy(Pattern.compile(odataModelPattern + "|.*_(EventRecord)?Oem(Actions)?"));
-        this.modelGenerationPolicies[1] = new ODataPropertyPolicy(new ODataTypeIdentifier(), this.clientMode);
+        this.modelGenerationPolicies[1] = new ModelDeletionPolicy(duplicatedSchemas, false);
+        this.modelGenerationPolicies[2] = new ODataPropertyPolicy(new ODataTypeIdentifier(), this.clientMode);
         JsonSchemaMapper[] jsonSchemaMappers = new JsonSchemaMapper[2];
 
         Pattern versionParsePattern = Pattern.compile("([0-9]+)_([0-9]+)_([0-9]+)");
@@ -124,8 +138,8 @@ public class RedfishCodegen {
         jsonSchemaMappers[1] = new JsonSchemaMapper(
                 odataModelIdentifierFactory,
                 odataJsonSchema.get().file.getFileName().toString());
-        this.modelGenerationPolicies[2] = new ModelMetadataPolicy(new JsonSchemaIdentifier(jsonSchemaMappers));
-        this.modelGenerationPolicies[3] = new AdditionalModelAttributesPolicy(
+        this.modelGenerationPolicies[3] = new ModelMetadataPolicy(new JsonSchemaIdentifier(jsonSchemaMappers));
+        this.modelGenerationPolicies[4] = new AdditionalModelAttributesPolicy(
                 Pattern.compile("^(Event|Message)_v[0-9_]+(Event|Message)$"),
                 CfgAttrExpression.withEqualityPredicate("feature", "\"valuable\"")
                         .attribute("derive(valuable::Valuable)")
@@ -155,19 +169,11 @@ public class RedfishCodegen {
         componentMatchers[1] = new ActionComponentMatcher();
         this.componentMatchService = new ComponentMatchService(componentMatchers, new PathService());
 
-        // The OpenapiSpecification will automatically generate names for inlined schemas. Having run the tool and seen (in the
-        // console output) that these schemas are assigned autogenerated names, we choose to assign more meaningful names
-        // here.
-        Map<String, String> inlineSchemaNameMappings = new HashMap<>();
-        inlineSchemaNameMappings.put("RedfishError_error", "RedfishRedfishError");
-        inlineSchemaNameMappings.put("_redfish_v1_odata_get_200_response", "odata-v4_ServiceDocument");
-        inlineSchemaNameMappings.put("_redfish_v1_odata_get_200_response_value_inner", "odata-v4_Service");
-
         Pattern[] ignoredSchemaFiles = new Pattern[2];
         ignoredSchemaFiles[0] = Pattern.compile("^odata.*$");
         ignoredSchemaFiles[1] = Pattern.compile("^redfish-payload-annotations-.*$");
-        OpenapiSpecification specification = new OpenapiSpecification(Path.of(specDirectory), inlineSchemaNameMappings,
-                ignoredSchemaFiles);
+        OpenapiSpecification specification = new OpenapiSpecification(Path.of(specDirectory), ignoredSchemaFiles,
+                promotedSchemaModelTypeMapper);
         this.document = specification.getRedfishDataModel();
     }
 
@@ -336,7 +342,7 @@ public class RedfishCodegen {
         Map<String, ModuleFile<ModelContext>> models = this.buildModels();
 
         RustType messageType = this.getMessageType(models);
-        RustType health = this.modelResolver.resolvePath("#/components/schemas/Resource_Health");
+        RustType health = this.modelResolver.resolvePath("Resource_Health");
         RegistryFactory factory = new RegistryFactory(messageType, health);
         Map<PascalCaseName, RegistryContext> registries = this.buildRegistries(factory);
         switch (component) {

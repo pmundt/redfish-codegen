@@ -1,4 +1,4 @@
-use redfish_models::models::message::v1_1_2::Message;
+use redfish_models::models::message::v1_2_1::Message;
 use redfish_models::models::redfish::{Error, RedfishError};
 
 pub fn one_message(error: Message) -> Error {

@@ -14,15 +14,15 @@ use seuss::{
     core::{error, privilege, convert::IntoRedfishMessage},
     middleware::ResourceLocator,
     models::{
-        computer_system::v1_20_1::{
+        computer_system::v1_22_2::{
             Actions, ComputerSystem as ComputerSystemModel, Reset, ResetRequestBody,
         },
         computer_system_collection::ComputerSystemCollection as ComputerSystemCollectionModel,
         odata_v4,
         resource::{self, ResetType},
-        service_root::v1_16_0::{Links, ServiceRoot as ServiceRootModel},
+        service_root::v1_17_0::{Links, ServiceRoot as ServiceRootModel},
     },
-    registries::base::v1_16_0::Base,
+    registries::base::v1_18_1::Base,
     service::{AccountService, RedfishService, SessionService},
 };
 use std::{

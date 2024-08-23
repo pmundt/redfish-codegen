@@ -1,7 +1,7 @@
 package com.twardyece.dmtf.model;
 
 import com.twardyece.dmtf.CratePath;
-import com.twardyece.dmtf.model.mapper.NamespaceMapper;
+import com.twardyece.dmtf.model.mapper.IModelModelMapper;
 import com.twardyece.dmtf.rust.RustConfig;
 import com.twardyece.dmtf.rust.RustType;
 import com.twardyece.dmtf.model.mapper.IModelTypeMapper;
@@ -17,12 +17,14 @@ import java.util.regex.Pattern;
 
 public class ModelResolver {
     private final IModelTypeMapper[] mappers;
-    private final NamespaceMapper[] namespaceMappers;
+    private final IModelModelMapper[] namespaceMappers;
     private final RustTypeFactory rustTypeFactory;
     private static final Logger LOGGER = LoggerFactory.getLogger(ModelResolver.class);
     private static final PascalCaseName VEC_NAME = new PascalCaseName("Vec");
     public static final Map<String, RustType> RUST_TYPE_MAP;
     private static final Pattern schemaPath = Pattern.compile("#/components/schemas/");
+
+    private HashMap<String, IModelTypeMapper.ModelMatchSpecification> models;
 
     static {
         RUST_TYPE_MAP = new HashMap<>();
@@ -33,21 +35,21 @@ public class ModelResolver {
     }
 
 
-    public ModelResolver(IModelTypeMapper[] mappers, NamespaceMapper[] namespaceMappers) {
+    public ModelResolver(IModelTypeMapper[] mappers, IModelModelMapper[] namespaceMappers) {
         this.mappers = mappers;
         this.namespaceMappers = namespaceMappers;
         this.rustTypeFactory = new RustTypeFactory();
+        this.models = new HashMap<>();
     }
 
     /**
      * Obtain just the schema identifier from the OpenAPI path. For example, converts
      * #/components/schemas/Message_v1_1_2_Message to Message_v1_1_2_Message. Throws RuntimeException if the Schema does
      * not contain a valid $ref.
-     * @param schema The schema containing the path
+     * @param url The full path
      * @return the Redfish schema identifier.
      */
-    public static String getSchemaIdentifier(Schema schema) {
-        String url = schema.get$ref();
+    public static String getSchemaIdentifier(String url) {
         // TODO: There's a faster way to do this than pattern matching.
         Matcher matcher = schemaPath.matcher(url);
         if (!matcher.find()) {
@@ -65,7 +67,7 @@ public class ModelResolver {
      * @return The corresponding Rust type.
      */
     public RustType resolvePath(String name) {
-        for (NamespaceMapper namespaceMapper : namespaceMappers) {
+        for (IModelModelMapper namespaceMapper : namespaceMappers) {
             Optional<String> match = namespaceMapper.match(name);
             if (match.isPresent()) {
                 name = match.get();
@@ -75,6 +77,7 @@ public class ModelResolver {
         for (IModelTypeMapper mapper : this.mappers) {
             Optional<IModelTypeMapper.ModelMatchSpecification> module = mapper.matchesType(name);
             if (module.isPresent()) {
+                this.models.put(name, module.get());
                 return rustTypeFactory.toRustType(module.get());
             }
         }
@@ -91,14 +94,7 @@ public class ModelResolver {
         // TODO: Today, namespace mapping is only necessary for forward resolution. This indicates a bit of potential
         //  fragility in the model resolution system that should be addressed.
         IModelTypeMapper.ModelMatchSpecification modelMatchSpecification = rustTypeFactory.toModelMatchSpecification(rustType);
-        for (IModelTypeMapper mapper : this.mappers) {
-            Optional<String> identifier = mapper.matchesName(modelMatchSpecification);
-            if (identifier.isPresent()) {
-                return identifier.get();
-            }
-        }
-
-        return null;
+        return this.models.entrySet().stream().filter(entry -> entry.getValue().equals(modelMatchSpecification)).findFirst().get().getKey();
     }
 
     /**
@@ -109,9 +105,14 @@ public class ModelResolver {
      * @return A Rust type corresponding to the OpenAPI schema object.
      */
     public RustType resolveSchema(Schema schema) {
+        Optional<RustType> rustType = InlineSchemaResolver.resolveInlineOptionalSchema(schema, this);
+        if (rustType.isPresent()) {
+            return rustType.get();
+        }
+
         String type = schema.getType();
         if (null == type) {
-            return this.resolvePath(getSchemaIdentifier(schema));
+            return this.resolvePath(getSchemaIdentifier(schema.get$ref()));
         } else if ("array".equals(schema.getType())) {
             // It's an array type
             return new RustType(CratePath.empty(), VEC_NAME, new RustType[]{this.resolveSchema(schema.getItems())});
@@ -128,7 +129,7 @@ public class ModelResolver {
      * to instances of RustType. It's not a complicated conversion, which is why it lives here. In the future, we can
      * move this class elsewhere if more configuration is required, so that it can be injected to the ModelResolver.
      */
-    private class RustTypeFactory {
+    public static class RustTypeFactory {
         public RustTypeFactory() {}
 
         /**

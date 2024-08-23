@@ -1,7 +1,7 @@
 use chrono::{DateTime, Local};
 use redfish_models::{
-    models::{odata_v4, redfish, resource, session::v1_6_0},
-    registries::base::v1_16_0::Base,
+    models::{odata_v4, redfish, resource, session::v1_7_2},
+    registries::base::v1_18_1::Base,
 };
 use redfish_core::{auth::AuthenticatedUser, convert::IntoRedfishMessage, error};
 use std::{
@@ -15,7 +15,7 @@ use crate::auth::{SessionAuthentication, SessionManagement};
 
 #[derive(Clone)]
 struct ManagedSession {
-    session: v1_6_0::Session,
+    session: v1_7_2::Session,
     last_request: DateTime<Local>,
     user: AuthenticatedUser,
 }
@@ -111,9 +111,9 @@ where
 
     fn create_session(
         &mut self,
-        session: v1_6_0::Session,
+        session: v1_7_2::Session,
         base_path: String,
-    ) -> Result<v1_6_0::Session, redfish::Error> {
+    ) -> Result<v1_7_2::Session, redfish::Error> {
         let user_name = session.user_name.clone().ok_or_else(|| {
             error::one_message(Base::PropertyMissing("UserName".to_string()).into_redfish_message())
         })?;
@@ -134,7 +134,7 @@ where
         }
         let token = self.token(&user_name);
 
-        let created_session = v1_6_0::Session {
+        let created_session = v1_7_2::Session {
             user_name: Some(user_name),
             odata_id: odata_v4::Id(base_path + "/" + &id),
             id: resource::Id(id.clone()),
@@ -168,7 +168,7 @@ where
             .ok_or_else(|| error::one_message(Base::NoValidSession.into_redfish_message()))
     }
 
-    fn get_session(&self, id: Self::Id) -> Result<v1_6_0::Session, redfish::Error> {
+    fn get_session(&self, id: Self::Id) -> Result<v1_7_2::Session, redfish::Error> {
         let sessions = self.sessions.lock().unwrap();
         sessions
             .iter()
