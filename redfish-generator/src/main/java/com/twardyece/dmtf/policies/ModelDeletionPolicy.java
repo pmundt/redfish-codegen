@@ -13,9 +13,16 @@ import java.util.regex.Pattern;
 
 public class ModelDeletionPolicy implements IModelGenerationPolicy {
     private final Pattern pattern;
+    private final boolean deleteReferencingProperties;
+
+    public ModelDeletionPolicy(Pattern pattern, boolean deleteReferencingProperties) {
+        this.pattern = pattern;
+        this.deleteReferencingProperties = deleteReferencingProperties;
+    }
 
     public ModelDeletionPolicy(Pattern pattern) {
         this.pattern = pattern;
+        this.deleteReferencingProperties = true;
     }
 
     @Override
@@ -27,14 +34,17 @@ public class ModelDeletionPolicy implements IModelGenerationPolicy {
         List<String> markedModels = models.entrySet().stream().filter(filter).map(Map.Entry::getKey).toList();
         List<RustType> markedTypes = markedModels.stream().map(models::get)
                 .map(m -> m.getContext().rustType).toList();
-        models.values().forEach(model -> {
-            ModelContext modelContext = model.getContext();
-            if (null != modelContext.structContext) {
-                List<StructContext.Property> markedProperties = modelContext.structContext.properties.stream()
-                        .filter(property -> propertyTypeMarkedForDeletion(property, markedTypes)).toList();
-                markedProperties.forEach(property -> modelContext.structContext.properties.remove(property));
-            }
-        });
+
+        if (this.deleteReferencingProperties) {
+            models.values().forEach(model -> {
+                ModelContext modelContext = model.getContext();
+                if (null != modelContext.structContext) {
+                    List<StructContext.Property> markedProperties = modelContext.structContext.properties.stream()
+                            .filter(property -> propertyTypeMarkedForDeletion(property, markedTypes)).toList();
+                    markedProperties.forEach(property -> modelContext.structContext.properties.remove(property));
+                }
+            });
+        }
 
         markedModels.forEach(models::remove);
     }
