@@ -26,8 +26,29 @@ if [ ! -d schema-patches ]; then
 	exit 1
 fi
 
+update_patches=true
+schema_hashfile="schema-patches/.hash"
+
 setup() {
 	make -f generate.mk clean && make -f generate.mk unzip
+
+	# Get the current hash
+	current_hash=$(md5sum ${BUILD_DIRECTORY}/openapi/*.yaml | md5sum | awk '{ print $1 }')
+
+	# Compare against the hash the patches were previously generated against, if it exists
+	if [ -f "$schema_hashfile" ]; then
+		last_hash=$(cat ${schema_hashfile})
+
+		# Skip regeneration of the patches if hashes are the same
+		if [ "$current_hash" == "$last_hash" ]; then
+			printf "Current series already applies, skipping patch regeneration.\n"
+			update_patches=false
+			return
+		fi
+	fi
+
+	# Save current hash for successive comparison
+	echo $current_hash > $schema_hashfile
 
 	# Reset the patches
 	for patch in $PATCHES; do
@@ -53,7 +74,9 @@ patch_by_script() {
 }
 
 setup
-for ((i = 0; i < ${#PATCHES[@]}; i++)); do
-	patch_by_script ${PATCHES[$i]} ${SCRIPTS[$i]}
-done
+if [ "$update_patches" = true ]; then
+	for ((i = 0; i < ${#PATCHES[@]}; i++)); do
+		patch_by_script ${PATCHES[$i]} ${SCRIPTS[$i]}
+	done
+fi
 teardown
