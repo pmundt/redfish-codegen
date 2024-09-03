@@ -27,6 +27,7 @@ public class Abbreviation implements IWord {
         SPECIAL_ABBREVIATIONS.put("DHCPv4", new Abbreviation("DHCPv4"));
         SPECIAL_ABBREVIATIONS.put("DHCPv6", new Abbreviation("DHCPv6"));
         SPECIAL_ABBREVIATIONS.put("I2C", new Abbreviation("I2C"));
+        SPECIAL_ABBREVIATIONS.put("FlexRay", new Abbreviation("FlexRay"));
     }
 
     public Abbreviation(String upperCaseValue) {
