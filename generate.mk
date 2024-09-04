@@ -20,6 +20,9 @@ REGISTRY_FILE=DSP8011_$(REGISTRY_VERSION).zip
 
 B=DSP8010_$(REDFISH_VERSION)
 
+# Check for GNU mv
+GNUMV=$(shell which gmv || echo mv)
+
 SWORDFISH_VERSION=v1.2.6
 SWORDFISH_SCHEMA_FILE=Swordfish_$(SWORDFISH_VERSION)_Schema.zip
 SWORDFISH_LINK=https://www.snia.org/sites/default/files/technical-work/swordfish/release/$(SWORDFISH_VERSION)/zip/$(SWORDFISH_SCHEMA_FILE)
@@ -73,7 +76,7 @@ $(B)/.unzip.lock: $(SCHEMA_FILES)
 	: # Unzip from the swordfish distribution only those files which are
 	: # not included in the Redfish distribution.
 	unzip -n -DD -d swordfish $(SWORDFISH_SCHEMA_FILE)
-	mv --update=none swordfish/yaml/* $(B)/openapi/
+	$(GNUMV) --update=none swordfish/yaml/* $(B)/openapi/
 	unzip -o -DD -d registry $(REGISTRY_FILE)
 	touch $@
 
